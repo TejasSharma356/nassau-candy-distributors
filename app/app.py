@@ -202,9 +202,16 @@ GRADIENT_BAD = [[0, "#22c55e"], [0.5, "#f59e0b"], [1, "#ef4444"]]
 def load_data():
     """Load and merge all datasets for the dashboard."""
     base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    raw_orders = pd.read_csv(
-        os.path.join(base, "data/processed/cleaned_orders.csv")
-    )
+    processed_path = os.path.join(base, "data/processed/cleaned_orders.csv")
+
+    # Auto-run the data pipeline if processed files don't exist yet
+    # (This handles first-run on Streamlit Cloud where processed/ is gitignored)
+    if not os.path.exists(processed_path):
+        os.makedirs(os.path.join(base, "data", "processed"), exist_ok=True)
+        from src.data_processing import clean_orders_data  # noqa: E402
+        clean_orders_data()
+
+    raw_orders = pd.read_csv(processed_path)
     raw_orders['Order Date'] = pd.to_datetime(raw_orders['Order Date'])
     raw_orders['Ship Date'] = pd.to_datetime(raw_orders['Ship Date'])
     mapping_df = pd.read_csv(
