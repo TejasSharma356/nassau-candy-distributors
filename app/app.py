@@ -882,9 +882,12 @@ with tab_predict:
             st.info("Configure the order and click *Predict Delay Risk* to generate the AI analysis report.")
 
     except FileNotFoundError:
-        st.warning(
-            "Model not found. Run `python src/ml_model.py` first."
-        )
+        # Model not found — auto-train it on first run (handles Streamlit Cloud)
+        with st.spinner("🤖 Training AI model for the first time. This takes ~30 seconds..."):
+            from src.ml_model import train_model  # noqa: E402
+            train_model()
+        st.success("✅ Model trained! Reloading...")
+        st.rerun()
 
 # ──────────────────────────────────────────────────────────────────────
 # FOOTER
